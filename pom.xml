@@ -30,7 +30,7 @@
   <url>https://github.com/Gergilcan/PostgreSQL-mapper</url>
   <groupId>io.github.gergilcan</groupId>
   <artifactId>PostgreSQL-mapper</artifactId>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
   <name>PostgreSQL-mapper</name>
   <description>Mapper that allows you to transform from resultSets to entities.</description>
   <properties>
