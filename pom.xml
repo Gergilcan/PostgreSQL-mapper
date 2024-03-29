@@ -10,10 +10,24 @@
     <relativePath /> <!-- lookup parent from repository -->
   </parent>
   <scm>
-    <connection>scm:git:git://github.com/simpligility/ossrh-demo.git</connection>
-    <developerConnection>scm:git:ssh://github.com:simpligility/ossrh-demo.git</developerConnection>
-    <url>http://github.com/simpligility/ossrh-demo/tree/master</url>
+    <connection>scm:git:git://github.com/Gergilcan/PostgreSQL-mapper.git</connection>
+    <developerConnection>scm:git:ssh://github.com/Gergilcan/PostgreSQL-mapper.git</developerConnection>
+    <url>https://github.com/Gergilcan/PostgreSQL-mapper.git</url>
   </scm>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>Gergilcan</id>
+      <name>Gerard Gilabert</name>
+      <email>gila791@hotmail.com</email>
+    </developer>
+  </developers>
+  <url>https://github.com/Gergilcan/PostgreSQL-mapper</url>
   <groupId>io.github.gergilcan</groupId>
   <artifactId>PostgreSQL-mapper</artifactId>
   <version>0.0.1</version>
@@ -53,21 +67,49 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.6.3</version>
-        <configuration>
-          <!-- Configuration options for Javadoc generation -->
-        </configuration>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>3.2.2</version>
         <executions>
           <execution>
-            <id>generate-javadoc</id>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
             <goals>
-              <goal>javadoc</goal>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <keyname>1C6BF3B8D2804B7627DDB74E07ED7EC099219DC2</keyname>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.2.1</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar-no-fork</goal>
             </goals>
           </execution>
         </executions>
       </plugin>
-
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.6.3</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
@@ -92,5 +134,4 @@
       </plugin>
     </plugins>
   </build>
-
 </project>

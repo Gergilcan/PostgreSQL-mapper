@@ -1,4 +1,4 @@
-package com.gergilcan.PostgreSQLmapper.core;
+package io.github.gergilcan.PostgreSQLmapper.core;
 
 import java.io.IOException;
 import java.sql.ResultSet;

@@ -1,4 +1,4 @@
-package com.gergilcan.PostgreSQLmapper.core;
+package io.github.gergilcan.PostgreSQLmapper.core;
 
 import java.sql.ResultSet;
 
@@ -14,11 +14,11 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
  * A custom JSON mapper that provides serialization and deserialization
  * functionality for JSON objects.
  */
-public class CustomJsonMapper {
+public class PostgresEntityMapper {
   ObjectWriter writer;
   ObjectMapper mapper;
 
-  public CustomJsonMapper() {
+  public PostgresEntityMapper() {
     this.mapper = new JsonMapper();
     SimpleModule module = new SimpleModule();
     module.addSerializer(PgArray.class, new PgArraySerializer());
