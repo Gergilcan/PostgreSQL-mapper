@@ -21,6 +21,7 @@ The purpose of this project is to be able to map to an Entity class from a resul
 To use it you just need to create an instance of the PostgresEntityMapper. This class can be a singleton if you want due that its an stateless class.
 Then just call the map method passing a result set coming from a query and the second parameter needed is the class of each entity. This will return you the correctly formed
 entity.
+The entities can contain other entities, so you can have a tree of entities. The mapper will take care of that too.
 
 ## Integration
 
@@ -30,7 +31,7 @@ You just need to add the following dependency to the pom.xml file:
 <dependency>
   <groupId>io.github.gergilcan</groupId>
   <artifactId>PostgreSQL-mapper</artifactId>
-  <version>0.0.4</version>
+  <version>0.0.5</version>
 </dependency>
 ```
 
