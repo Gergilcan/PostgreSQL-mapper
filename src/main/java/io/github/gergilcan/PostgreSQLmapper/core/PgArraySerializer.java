@@ -12,7 +12,8 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 /**
  * Serializes a PgArray object into JSON format.
  * This class extends the StdSerializer class and provides custom serialization
- * logic for PgArray objects.
+ * logic for PgArray objects. Optimized for performance and proper exception
+ * handling.
  */
 public class PgArraySerializer extends StdSerializer<PgArray> {
 
@@ -24,19 +25,35 @@ public class PgArraySerializer extends StdSerializer<PgArray> {
     super(t);
   }
 
+  /**
+   * Serializes a PostgreSQL array into a JSON array.
+   *
+   * @param value    The PgArray to serialize
+   * @param jgen     The JSON generator
+   * @param provider The serializer provider
+   * @throws IOException If an I/O error occurs or if the array cannot be accessed
+   */
   @Override
   public void serialize(
       PgArray value, JsonGenerator jgen, SerializerProvider provider)
       throws IOException {
     try {
+      // Get array elements efficiently
       Object[] array = (Object[]) value.getArray();
+
+      // Use non-deprecated approach to write the array
       jgen.writeStartArray();
-      for (int i = 0; i < array.length; i++) {
-        jgen.writeObject(array[i]);
+
+      // Directly write array elements
+      for (Object element : array) {
+        jgen.writeObject(element);
       }
+
       jgen.writeEndArray();
     } catch (SQLException e) {
-      e.printStackTrace();
+      // Wrap SQL exceptions in IOException with meaningful message instead of just
+      // printing stack trace
+      throw new IOException("Failed to serialize PostgreSQL array: " + e.getMessage(), e);
     }
   }
 }

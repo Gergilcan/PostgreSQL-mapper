@@ -6,7 +6,6 @@ import org.postgresql.util.PGobject;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
 /**
@@ -18,10 +17,9 @@ public class PgObjectSerializer extends JsonSerializer<Object> {
   /**
    * Serializes the given object value into JSON using the provided JsonGenerator.
    * If the value is an instance of PGobject, it checks the type of the PGobject
-   * and
-   * writes the value accordingly. If the type is "json" or "jsonb", it writes the
+   * and writes the value accordingly. If the type is "json" or "jsonb", it writes the
    * raw value. Otherwise, it writes the value as a string. If the value is not an
-   * instance of PGobject, it uses an ObjectMapper to serialize the value.
+   * instance of PGobject, it uses the provided SerializerProvider to serialize the value.
    *
    * @param value       The object value to be serialized.
    * @param gen         The JsonGenerator used to write the JSON.
@@ -30,19 +28,37 @@ public class PgObjectSerializer extends JsonSerializer<Object> {
    */
   @Override
   public void serialize(Object value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+    if (value == null) {
+      gen.writeNull();
+      return;
+    }
+    
     if (value instanceof PGobject) {
       PGobject pgObject = (PGobject) value;
+      String pgValue = pgObject.getValue();
+      
+      // Handle null values in PGobject
+      if (pgValue == null) {
+        gen.writeNull();
+        return;
+      }
+      
       switch (pgObject.getType()) {
         case "json":
         case "jsonb":
-          gen.writeRawValue(pgObject.getValue());
+          // Safely handle empty JSON strings
+          if (pgValue.trim().isEmpty()) {
+            gen.writeRawValue("{}");
+          } else {
+            gen.writeRawValue(pgValue);
+          }
           break;
         default:
-          gen.writeString(pgObject.getValue());
+          gen.writeString(pgValue);
       }
     } else {
-      ObjectMapper mapper = new ObjectMapper();
-      mapper.writeValue(gen, value);
+      // Use the provided SerializerProvider instead of creating a new ObjectMapper
+      serializers.defaultSerializeValue(value, gen);
     }
   }
 }
