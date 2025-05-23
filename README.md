@@ -30,7 +30,7 @@ You just need to add the following dependency to the pom.xml file:
 <dependency>
   <groupId>io.github.gergilcan</groupId>
   <artifactId>PostgreSQL-mapper</artifactId>
-  <version>0.0.3</version>
+  <version>0.0.4</version>
 </dependency>
 ```
 
@@ -41,4 +41,7 @@ Anyone is able to contribute, feel free to do it to increase its scope or to fix
 ## License
 
 This library is free to use in any of your personal or commercial projects, just include a mention.
-````
+
+```
+
+```
