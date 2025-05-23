@@ -36,7 +36,7 @@ public class PostgresEntityMapper {
    */
   public <T> T map(Object fromValue, Class<T> toValueType) {
     var stringValue = this.writeValueAsString(fromValue);
-    return this.readValue(stringValue, toValueType);
+    return (T) this.readValue(stringValue, toValueType);
   }
 
   /**
