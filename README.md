@@ -9,6 +9,7 @@ PostgreSQL-mapper
   - [Introduction](#introduction)
   - [Usage](#usage)
   - [Integration](#integration)
+  - [Performance](#performance)
   - [Contributing](#contributing)
   - [License](#license)
 
@@ -31,9 +32,36 @@ You just need to add the following dependency to the pom.xml file:
 <dependency>
   <groupId>io.github.gergilcan</groupId>
   <artifactId>PostgreSQL-mapper</artifactId>
-  <version>0.0.5</version>
+  <version>0.0.6</version>
 </dependency>
 ```
+
+## Performance
+
+After the 0.0.6 version, the library has been optimized to use a direct mapping approach, which significantly improves performance when mapping ResultSet objects to Java objects. This is achieved by eliminating the intermediate string representation that was previously used in the mapping process.
+
+This direct mapping approach reduces processing time and memory usage, especially for large result sets, making it a more efficient solution for mapping database results to Java entities.
+
+This improvement was of more of a 90% in performance, so it is highly recommended to use the latest version of the library for optimal performance.
+
+The current performance times are for the result set mapping to a list of entities of complex objects with more than 10 fields and 5 lists, maps, and other complex objects:
+-- For list ---
+Direct mapping 10 rows took 29 ms
+Direct mapping 100 rows took 46 ms
+Direct mapping 1000 rows took 263 ms
+Direct mapping 5000 rows took 565 ms
+Direct mapping 100000 rows took 9259 ms
+
+-- For array ---
+Direct mapping 10 rows took 64 ms
+Direct mapping 100 rows took 76 ms
+Direct mapping 1000 rows took 313 ms
+Direct mapping 5000 rows took 672 ms
+Direct mapping 100000 rows took 9595 ms
+
+This performance data shows that the library is capable of handling large datasets efficiently, making it suitable for applications that require high-performance database interactions.
+
+You can see that the array mapping is slower than the list mapping, this is because the array mapping needs to convert the array to a list first, so it is not recommended to use arrays in the database if you want to use this library. This is due we dont know the resultset size, so we need to convert the array to a list first, which adds some overhead.
 
 ## Contributing
 

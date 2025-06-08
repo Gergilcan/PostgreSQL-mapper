@@ -1,12 +1,12 @@
 package io.github.gergilcan.PostgreSQLmapper.core;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import org.postgresql.jdbc.PgArray;
 import org.postgresql.util.PGobject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
@@ -15,8 +15,8 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
  * functionality for JSON objects.
  */
 public class PostgresEntityMapper {
-  ObjectWriter writer;
-  ObjectMapper mapper;
+  private ObjectMapper mapper;
+  private DirectResultSetMapper directMapper;
 
   public PostgresEntityMapper() {
     this.mapper = new JsonMapper();
@@ -25,6 +25,9 @@ public class PostgresEntityMapper {
     module.addSerializer(PGobject.class, new PgObjectSerializer());
     module.addSerializer(ResultSet.class, new ResultSetSerializer());
     mapper.registerModule(module);
+
+    // Initialize the direct mapper with our configured ObjectMapper
+    this.directMapper = new DirectResultSetMapper(mapper);
   }
 
   /**
@@ -35,6 +38,17 @@ public class PostgresEntityMapper {
    * @return The mapped object
    */
   public <T> T map(Object fromValue, Class<T> toValueType) {
+    // If the fromValue is a ResultSet and direct mapping is possible, use it
+    if (fromValue instanceof ResultSet) {
+      try {
+        return directMapper.mapResultSet((ResultSet) fromValue, toValueType);
+      } catch (SQLException e) {
+        // Fall back to the traditional approach if direct mapping fails
+        e.printStackTrace();
+      }
+    }
+
+    // Use the traditional approach for all other cases
     var stringValue = this.writeValueAsString(fromValue);
     return (T) this.readValue(stringValue, toValueType);
   }
