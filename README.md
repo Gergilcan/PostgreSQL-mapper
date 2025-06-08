@@ -46,18 +46,18 @@ This improvement was of more of a 90% in performance, so it is highly recommende
 
 The current performance times are for the result set mapping to a list of entities of complex objects with more than 10 fields and 5 lists, maps, and other complex objects:
 -- For list ---
-Direct mapping 10 rows took 29 ms
-Direct mapping 100 rows took 46 ms
-Direct mapping 1000 rows took 263 ms
-Direct mapping 5000 rows took 565 ms
-Direct mapping 100000 rows took 9259 ms
+Direct mapping 10 rows for list took 2 ms
+Direct mapping 100 rows for list took 12 ms
+Direct mapping 1000 rows for list took 84 ms
+Direct mapping 5000 rows for list took 557 ms
+Direct mapping 100000 rows for list took 9259 ms
 
 -- For array ---
-Direct mapping 10 rows took 64 ms
-Direct mapping 100 rows took 76 ms
-Direct mapping 1000 rows took 313 ms
-Direct mapping 5000 rows took 672 ms
-Direct mapping 100000 rows took 9595 ms
+Direct mapping 10 rows for array took 50 ms
+Direct mapping 100 rows for array took 38 ms
+Direct mapping 1000 rows for array took 144 ms
+Direct mapping 5000 rows for array took 605 ms
+Direct mapping 100000 rows for array took 9589 ms
 
 This performance data shows that the library is capable of handling large datasets efficiently, making it suitable for applications that require high-performance database interactions.
 
