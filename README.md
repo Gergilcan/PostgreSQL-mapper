@@ -45,8 +45,18 @@ Performance is exercised by JVM tests (timings are indicative and vary by CPU, J
 
 | Test | What it measures |
 |------|------------------|
-| [`DirectResultSetMapperTest`](src/test/java/io/github/gergilcan/PostgreSQLmapper/core/DirectResultSetMapperTest.java) | `PostgresEntityMapper.map` on a mock `ResultSet` built by [`ComplexEntityHelper`](src/test/java/io/github/gergilcan/PostgreSQLmapper/helpers/ComplexEntityHelper.java): nested entity with many columns and JSONB fields. Parameterized row counts: `10`, `100`, `1000`, `5000`, `100000`. Prints duration for **`List`** vs **array** targets. |
+| [`DirectResultSetMapperTest`](src/test/java/io/github/gergilcan/PostgreSQLmapper/core/DirectResultSetMapperTest.java) | `PostgresEntityMapper.map` on a mock `ResultSet` from [`ComplexEntityHelper`](src/test/java/io/github/gergilcan/PostgreSQLmapper/helpers/ComplexEntityHelper.java): nested entity with many columns and JSONB fields. Row counts: `10`, `100`, `1000`, `5000`, `100000`. After **2 warmup** iterations, prints **median / min / max** ms over **5** timed runs (**3** for `100000` rows) for **`List`** vs **`ComplexEntity[]`**. |
 | [`ResultSetSerializerPerformanceTest`](src/test/java/io/github/gergilcan/PostgreSQLmapper/core/ResultSetSerializerPerformanceTest.java) | Jackson serialization of a `ResultSet` through [`ResultSetSerializer`](src/main/java/io/github/gergilcan/PostgreSQLmapper/core/ResultSetSerializer.java) (warm-up + varied row/column counts). |
+
+**Reference run** (`DirectResultSetMapperTest` console output): **Java 21.0.10** (OpenJDK 64-Bit Server VM). Figures are **milliseconds**; min–max spans the timed samples for that row count.
+
+| Rows | `List` median | List min–max | `ComplexEntity[]` median | Array min–max |
+|-----:|-------------:|-------------:|-------------------------:|--------------:|
+| 10 | 1 | 1–1 | 5 | 4–7 |
+| 100 | 7 | 7–30 | 10 | 9–27 |
+| 1,000 | 69 | 46–92 | 112 | 89–814 |
+| 5,000 | 263 | 258–491 | 301 | 274–434 |
+| 100,000 | 6,819 | 6,197–8,652 | 8,579 | 7,499–10,666 |
 
 Run the performance-related tests and copy timings from the console:
 
