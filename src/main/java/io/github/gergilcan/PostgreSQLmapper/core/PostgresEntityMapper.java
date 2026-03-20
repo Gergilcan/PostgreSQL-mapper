@@ -7,8 +7,10 @@ import org.postgresql.jdbc.PgArray;
 import org.postgresql.util.PGobject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 /**
  * A custom JSON mapper that provides serialization and deserialization
@@ -20,6 +22,8 @@ public class PostgresEntityMapper {
 
   public PostgresEntityMapper() {
     this.mapper = new JsonMapper();
+    mapper.registerModule(new JavaTimeModule());
+    mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     SimpleModule module = new SimpleModule();
     module.addSerializer(PgArray.class, new PgArraySerializer());
     module.addSerializer(PGobject.class, new PgObjectSerializer());

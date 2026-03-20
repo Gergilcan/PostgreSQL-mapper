@@ -1,9 +1,15 @@
 package io.github.gergilcan.PostgreSQLmapper.core;
 
 import java.io.IOException;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -162,15 +168,47 @@ public class DirectResultSetMapper {
               // If we can't parse the JSON, use the original string value
               value = pgValue;
             }
+          } else if ("date".equals(pgObject.getType())) {
+            value = LocalDate.parse(pgValue);
+          } else if ("timestamp".equals(pgObject.getType()) || "timestamptz".equals(pgObject.getType())) {
+            value = parsePgTimestampText(pgValue);
           } else {
             value = pgValue;
           }
         }
+      } else if (value instanceof Timestamp) {
+        value = ((Timestamp) value).toLocalDateTime();
+      } else if (value instanceof OffsetDateTime) {
+        value = ((OffsetDateTime) value).toLocalDateTime();
+      } else if (value instanceof Date) {
+        value = ((Date) value).toLocalDate();
       }
 
       row.put(columnName, value);
     }
 
     return row;
+  }
+
+  /**
+   * Parses PostgreSQL {@code timestamp} / {@code timestamptz} text as {@link LocalDateTime}
+   * (instant-based values use the offset then drop the zone).
+   */
+  private static LocalDateTime parsePgTimestampText(String pgValue) {
+    String s = pgValue.trim();
+    String normalized = s.length() > 10 && s.charAt(10) == ' '
+        ? s.substring(0, 10) + 'T' + s.substring(11)
+        : s;
+    try {
+      return OffsetDateTime.parse(normalized).toLocalDateTime();
+    } catch (DateTimeParseException ignored) {
+      // not an offset datetime
+    }
+    try {
+      return LocalDateTime.parse(normalized);
+    } catch (DateTimeParseException ignored) {
+      // not ISO local
+    }
+    return Timestamp.valueOf(s).toLocalDateTime();
   }
 }
