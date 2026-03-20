@@ -1,76 +1,67 @@
-# Project Name
-
-PostgreSQL-mapper
+# PostgreSQL-mapper
 
 ## Table of Contents
 
-- [Project Name](#project-name)
-  - [Table of Contents](#table-of-contents)
-  - [Introduction](#introduction)
-  - [Usage](#usage)
-  - [Integration](#integration)
-  - [Performance](#performance)
-  - [Contributing](#contributing)
-  - [License](#license)
+- [Introduction](#introduction)
+- [Usage](#usage)
+- [Integration](#integration)
+- [Performance](#performance)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Introduction
 
-The purpose of this project is to be able to map to an Entity class from a result set coming from a PostgreSQL database wihtout the hurdle of having an ORM.
+This project maps rows from a PostgreSQL `ResultSet` into Java entity types **without** a full ORM.
 
 ## Usage
 
-To use it you just need to create an instance of the PostgresEntityMapper. This class can be a singleton if you want due that its an stateless class.
-Then just call the map method passing a result set coming from a query and the second parameter needed is the class of each entity. This will return you the correctly formed
-entity.
-The entities can contain other entities, so you can have a tree of entities. The mapper will take care of that too.
+Create an instance of `PostgresEntityMapper` (it is safe to use as a singleton). Call `map(resultSet, YourClass.class)` (or an array / `List` type where supported). Nested types and PostgreSQL `json` / `jsonb` fields are handled via Jackson.
+
+`java.time` types such as `LocalDate` and `LocalDateTime` are supported when reading JDBC / PostgreSQL date and timestamp values.
 
 ## Integration
 
-You just need to add the following dependency to the pom.xml file:
+Add the dependency to your `pom.xml` (use the latest released version):
 
 ```xml
 <dependency>
   <groupId>io.github.gergilcan</groupId>
   <artifactId>PostgreSQL-mapper</artifactId>
-  <version>0.0.6</version>
+  <version>0.1.1</version>
 </dependency>
 ```
 
 ## Performance
 
-After the 0.0.6 version, the library has been optimized to use a direct mapping approach, which significantly improves performance when mapping ResultSet objects to Java objects. This is achieved by eliminating the intermediate string representation that was previously used in the mapping process.
+### Direct mapping
 
-This direct mapping approach reduces processing time and memory usage, especially for large result sets, making it a more efficient solution for mapping database results to Java entities.
+For `ResultSet` inputs, `PostgresEntityMapper` uses `DirectResultSetMapper`: values are put into a per-row `Map` and converted with Jackson’s `convertValue`, **without** round-tripping through JSON strings. That path is much faster than serializing the whole `ResultSet` to JSON and parsing it again.
 
-This improvement was of more of a 90% in performance, so it is highly recommended to use the latest version of the library for optimal performance.
+Row extraction also **caches column names once per scan** (one metadata pass for all rows in that mapping) and builds row maps with an initial capacity suited to the column count, which reduces overhead on large result sets without changing behaviour.
 
-The current performance times are for the result set mapping to a list of entities of complex objects with more than 10 fields and 5 lists, maps, and other complex objects:
--- For list ---
-Direct mapping 10 rows for list took 2 ms
-Direct mapping 100 rows for list took 12 ms
-Direct mapping 1000 rows for list took 84 ms
-Direct mapping 5000 rows for list took 557 ms
-Direct mapping 100000 rows for list took 9259 ms
+### Benchmarks in this repo
 
--- For array ---
-Direct mapping 10 rows for array took 50 ms
-Direct mapping 100 rows for array took 38 ms
-Direct mapping 1000 rows for array took 144 ms
-Direct mapping 5000 rows for array took 605 ms
-Direct mapping 100000 rows for array took 9589 ms
+Performance is exercised by JVM tests (timings are indicative and vary by CPU, JDK, and load):
 
-This performance data shows that the library is capable of handling large datasets efficiently, making it suitable for applications that require high-performance database interactions.
+| Test | What it measures |
+|------|------------------|
+| [`DirectResultSetMapperTest`](src/test/java/io/github/gergilcan/PostgreSQLmapper/core/DirectResultSetMapperTest.java) | `PostgresEntityMapper.map` on a mock `ResultSet` built by [`ComplexEntityHelper`](src/test/java/io/github/gergilcan/PostgreSQLmapper/helpers/ComplexEntityHelper.java): nested entity with many columns and JSONB fields. Parameterized row counts: `10`, `100`, `1000`, `5000`, `100000`. Prints duration for **`List`** vs **array** targets. |
+| [`ResultSetSerializerPerformanceTest`](src/test/java/io/github/gergilcan/PostgreSQLmapper/core/ResultSetSerializerPerformanceTest.java) | Jackson serialization of a `ResultSet` through [`ResultSetSerializer`](src/main/java/io/github/gergilcan/PostgreSQLmapper/core/ResultSetSerializer.java) (warm-up + varied row/column counts). |
 
-You can see that the array mapping is slower than the list mapping, this is because the array mapping needs to convert the array to a list first, so it is not recommended to use arrays in the database if you want to use this library. This is due we dont know the resultset size, so we need to convert the array to a list first, which adds some overhead.
+Run the performance-related tests and copy timings from the console:
+
+```bash
+mvn test -Dtest=DirectResultSetMapperTest,ResultSetSerializerPerformanceTest
+```
+
+### List vs array targets
+
+Mapping to a **Java array** still collects entities in an `ArrayList` first (the JDBC API does not provide the final row count up front), then copies into an array. Prefer **`List<YourEntity>`** (or `List.class` where applicable) when you want the lowest overhead for many rows.
 
 ## Contributing
 
-Anyone is able to contribute, feel free to do it to increase its scope or to fix issues. If applicable, provide guidelines for contributing to the project. Include information on how to report issues, submit feature requests, or contribute code.
+Contributions are welcome: issues, fixes, and extensions to supported types or mapping modes.
 
 ## License
 
-This library is free to use in any of your personal or commercial projects, just include a mention.
-
-```
-
-```
+This library is free to use in personal or commercial projects; please include a mention.

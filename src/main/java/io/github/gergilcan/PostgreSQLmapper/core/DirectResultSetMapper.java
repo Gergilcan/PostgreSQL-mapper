@@ -69,7 +69,8 @@ public class DirectResultSetMapper {
 
     // For a specific entity type, we're expecting a single row
     if (resultSet.next()) {
-      Map<String, Object> rowMap = extractRowValues(resultSet);
+      String[] columnNames = columnNamesFrom(resultSet.getMetaData());
+      Map<String, Object> rowMap = extractRowValues(resultSet, columnNames);
       try {
         // Convert the map to the target entity type
         return mapper.convertValue(rowMap, targetType);
@@ -84,8 +85,9 @@ public class DirectResultSetMapper {
   private <T> T[] convertToArray(ResultSet resultSet, Class<T> targetType) throws SQLException {
     List<T> list = new ArrayList<>();
     try {
+      String[] columnNames = columnNamesFrom(resultSet.getMetaData());
       while (resultSet.next()) {
-        Map<String, Object> row = extractRowValues(resultSet);
+        Map<String, Object> row = extractRowValues(resultSet, columnNames);
         T item = mapper.convertValue(row, targetType);
         list.add(item);
       }
@@ -109,8 +111,9 @@ public class DirectResultSetMapper {
   private List<Map<String, Object>> convertToList(ResultSet resultSet) throws SQLException {
     List<Map<String, Object>> results = new ArrayList<>();
 
+    String[] columnNames = columnNamesFrom(resultSet.getMetaData());
     while (resultSet.next()) {
-      Map<String, Object> row = extractRowValues(resultSet);
+      Map<String, Object> row = extractRowValues(resultSet, columnNames);
       results.add(row);
     }
 
@@ -126,27 +129,38 @@ public class DirectResultSetMapper {
    */
   private Map<String, Object> convertToMap(ResultSet resultSet) throws SQLException {
     if (resultSet.next()) {
-      return extractRowValues(resultSet);
+      String[] columnNames = columnNamesFrom(resultSet.getMetaData());
+      return extractRowValues(resultSet, columnNames);
     }
     return new HashMap<>();
   }
 
+  private static String[] columnNamesFrom(ResultSetMetaData metaData) throws SQLException {
+    int columnCount = metaData.getColumnCount();
+    String[] names = new String[columnCount];
+    for (int i = 1; i <= columnCount; i++) {
+      names[i - 1] = metaData.getColumnName(i);
+    }
+    return names;
+  }
+
   /**
    * Extracts values from the current row of a ResultSet into a Map
-   * 
-   * @param resultSet The ResultSet to extract values from
+   *
+   * @param resultSet   The ResultSet to extract values from
+   * @param columnNames Column names from {@link #columnNamesFrom(ResultSetMetaData)}; reused across
+   *                    rows for the same ResultSet
    * @return A Map containing column name to value mappings
    * @throws SQLException If there is an error accessing the ResultSet
    */
-  private Map<String, Object> extractRowValues(ResultSet resultSet) throws SQLException {
-    ResultSetMetaData metaData = resultSet.getMetaData();
-    int columnCount = metaData.getColumnCount();
+  private Map<String, Object> extractRowValues(ResultSet resultSet, String[] columnNames) throws SQLException {
+    int columnCount = columnNames.length;
+    Map<String, Object> row = new HashMap<>((int) (columnCount / 0.75f) + 1);
 
-    Map<String, Object> row = new HashMap<>();
-
-    for (int i = 1; i <= columnCount; i++) {
-      String columnName = metaData.getColumnName(i);
-      Object value = resultSet.getObject(i);
+    for (int i = 0; i < columnCount; i++) {
+      String columnName = columnNames[i];
+      int jdbcColumn = i + 1;
+      Object value = resultSet.getObject(jdbcColumn);
 
       // Handle PostgreSQL specific types if needed
       if (value instanceof org.postgresql.jdbc.PgArray) {
